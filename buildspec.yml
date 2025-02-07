@@ -36,6 +36,7 @@ phases:
 artifacts:
   files:
     - '**/*'
+    - node-todo-app.zip 
   base-directory: '.'
   discard-paths: no
   exclude-patterns:
