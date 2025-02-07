@@ -25,14 +25,14 @@ phases:
       - echo "Building Docker image..."
       - docker build -t $IMAGE_NAME:latest .
       - echo "Creating zip package..."
-      - zip -r node-todo-app.zip * .[^.]*
+      - zip -r test-node-app.zip * .[^.]*
 
   post_build:
     commands:
       - echo "Pushing Docker image to DockerHub..."
       - docker push $IMAGE_NAME:latest
       - echo "Uploading zip file to S3..."
-      - aws s3 cp node-todo-app.zip s3://new-test-bucket-122/node-todo-app/
+      - aws s3 cp test-node-app.zip s3://new-test-bucket-122/test-node-app/
       - echo "Uploaded zip file to S3."
       - echo "Writing image definitions file..."
       - printf '{"ImageURI":"%s", "Port":8000}' $IMAGE_NAME:latest > imageDefinitions.json
@@ -41,7 +41,7 @@ phases:
 artifacts:
   files:
     - '**/*'
-    - node-todo-app.zip 
+    - test-node-app.zip 
   base-directory: '.'
   discard-paths: no
   exclude-patterns:
