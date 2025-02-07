@@ -10,7 +10,8 @@ env:
 
 phases:
   install:
-    # ... (no changes)
+    runtime-versions:
+      nodejs: 12.2.0
 
   pre_build:
     commands:
