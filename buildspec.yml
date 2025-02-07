@@ -4,9 +4,8 @@ env:
   parameter-store:
     DOCKER_USERNAME: /myapp/docker-credentials/username
     DOCKER_PASSWORD: /myapp/docker-credentials/password
-    # DOCKER_REGISTRY_URL: /myapp/docker-registry/url  (If you need it later)
   variables:
-    REPOSITORY_NAME: maverick334/test-node-app # Repository name
+    REPOSITORY_NAME: maverick334/test-node-app
 
 phases:
   install:
@@ -18,16 +17,31 @@ phases:
       - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
       - if [[ $? -eq 0 ]]; then echo "Docker login successful"; else echo "Docker login failed"; exit 1; fi
       - export IMAGE_URI="$DOCKER_USERNAME/$REPOSITORY_NAME" # Define the full image URI here
+      - echo "Image URI: $IMAGE_URI" # Important for debugging
 
   build:
     commands:
-      # ... (no changes)
-      - docker build -t $IMAGE_URI:latest .
+      - docker build -t $IMAGE_URI:latest . # Use $IMAGE_URI here!
 
   post_build:
     commands:
-      # ... (no changes)
-      - docker push $IMAGE_URI:latest
-      # ... (no changes)
+      - docker push $IMAGE_URI:latest # Use $IMAGE_URI here!
+      - echo Uploading zip file to S3 root location...
+      - aws s3 cp node-todo-app.zip s3://tws-aws-cicd-demo/node-todo-app/ # Upload zip file to the root of the bucket
+      - echo Writing image definitions file...
+      - printf '{"ImageURI":"%s", "Port":8000}' $IMAGE_NAME:latest > imageDefinitions.json
+      - cat imageDefinitions.json
 
-# ... (rest of your buildspec)
+artifacts:
+  files:
+    - '**/*'
+  base-directory: '.'
+  discard-paths: no
+  exclude-patterns:
+    - 'node_modules/**/*'
+    - '.git/**/*'
+    - '.gitignore'
+    - 'README.md'
+    - 'package-lock.json'
+
+
