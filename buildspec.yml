@@ -2,32 +2,34 @@ version: 0.2
 
 env:
   parameter-store:
-    DOCKER_USERNAME: /myapp/docker-credentials/username
-    DOCKER_PASSWORD: /myapp/docker-credentials/password
-    DOCKER_REGISTRY_URL: /myapp/docker-registry/url
+    DOCKER_USERNAME: "/myapp/docker-credentials/username"
+    DOCKER_PASSWORD: "/myapp/docker-credentials/password"
+    DOCKER_REGISTRY_URL: "/myapp/docker-registry/url"
 
 phases:
   install:
     runtime-versions:
-      nodejs: 12.2.0
+      nodejs: 12
 
   pre_build:
     commands:
-      - echo Logging in to Docker Registry...
-      - echo "$DOCKER_REGISTRY_PASSWORD" | docker login -u "$DOCKER_REGISTRY_USERNAME" --password-stdin "$DOCKER_REGISTRY_URL"
+      - echo Logging in to DockerHub...
+      - docker login -u "$DOCKER_USERNAME" --password "$DOCKER_PASSWORD"
       - IMAGE_REPO_NAME="test-node-app"
-      - IMAGE_NAME="$DOCKER_REGISTRY_USERNAME/$IMAGE_REPO_NAME"
-
+      - IMAGE_NAME="$DOCKER_USERNAME/$IMAGE_REPO_NAME"
+  
   build:
     commands:
-      - docker build -t $IMAGE_URI:latest . # Use $IMAGE_URI here!
+      - echo "Building Docker image..."
+      - docker build -t $IMAGE_NAME:latest .
 
   post_build:
     commands:
-      - docker push $IMAGE_URI:latest # Use $IMAGE_URI here!
-      - echo Uploading zip file to S3 root location...
-      - aws s3 cp node-todo-app.zip s3://tws-aws-cicd-demo/node-todo-app/ # Upload zip file to the root of the bucket
-      - echo Writing image definitions file...
+      - echo "Pushing Docker image to DockerHub..."
+      - docker push $IMAGE_NAME:latest
+      - echo "Uploading zip file to S3..."
+      - aws s3 cp node-todo-app.zip s3://tws-aws-cicd-demo/node-todo-app/
+      - echo "Writing image definition file..."
       - printf '{"ImageURI":"%s", "Port":8000}' $IMAGE_NAME:latest > imageDefinitions.json
       - cat imageDefinitions.json
 
@@ -42,5 +44,3 @@ artifacts:
     - '.gitignore'
     - 'README.md'
     - 'package-lock.json'
-
-
