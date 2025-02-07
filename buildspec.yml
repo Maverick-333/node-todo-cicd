@@ -4,8 +4,7 @@ env:
   parameter-store:
     DOCKER_USERNAME: /myapp/docker-credentials/username
     DOCKER_PASSWORD: /myapp/docker-credentials/password
-  variables:
-    REPOSITORY_NAME: maverick334/test-node-app
+    DOCKER_REGISTRY_URL: /myapp/docker-registry/url
 
 phases:
   install:
@@ -14,10 +13,10 @@ phases:
 
   pre_build:
     commands:
-      - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-      - if [[ $? -eq 0 ]]; then echo "Docker login successful"; else echo "Docker login failed"; exit 1; fi
-      - export IMAGE_URI="$DOCKER_USERNAME/$REPOSITORY_NAME" # Define the full image URI here
-      - echo "Image URI: $IMAGE_URI" # Important for debugging
+      - echo Logging in to Docker Registry...
+      - echo "$DOCKER_REGISTRY_PASSWORD" | docker login -u "$DOCKER_REGISTRY_USERNAME" --password-stdin "$DOCKER_REGISTRY_URL"
+      - IMAGE_REPO_NAME="test-node-app"
+      - IMAGE_NAME="$DOCKER_REGISTRY_USERNAME/$IMAGE_REPO_NAME"
 
   build:
     commands:
