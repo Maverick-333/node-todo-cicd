@@ -6,6 +6,10 @@ env:
     DOCKER_PASSWORD: "/myapp/docker-credentials/password"
     DOCKER_REGISTRY_URL: "/myapp/docker-registry/url"
 
+  variables:
+    IMAGE_REPO_NAME: "test-node-app"
+    IMAGE_NAME: "$DOCKER_USERNAME/test-node-app"
+
 phases:
   install:
     runtime-versions:
@@ -13,16 +17,15 @@ phases:
 
   pre_build:
     commands:
-      - echo Logging in to DockerHub...
-      - docker login -u "$DOCKER_USERNAME" --password "$DOCKER_PASSWORD"
-      - IMAGE_REPO_NAME="test-node-app"
-      - IMAGE_NAME="$DOCKER_USERNAME/$IMAGE_REPO_NAME"
-  
+      - echo "Logging in to DockerHub..."
+      - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
   build:
     commands:
       - echo "Building Docker image..."
       - docker build -t $IMAGE_NAME:latest .
-       - zip -r node-todo-app.zip * .[^.]*
+      - echo "Creating zip package..."
+      - zip -r node-todo-app.zip * .[^.]*
 
   post_build:
     commands:
@@ -30,7 +33,8 @@ phases:
       - docker push $IMAGE_NAME:latest
       - echo "Uploading zip file to S3..."
       - aws s3 cp node-todo-app.zip s3://new-test-bucket-122/node-todo-app/
-      - echo "Uploaded zip file to S3"."
+      - echo "Uploaded zip file to S3."
+      - echo "Writing image definitions file..."
       - printf '{"ImageURI":"%s", "Port":8000}' $IMAGE_NAME:latest > imageDefinitions.json
       - cat imageDefinitions.json
 
