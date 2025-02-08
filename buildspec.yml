@@ -8,7 +8,7 @@ env:
 
   variables:
     IMAGE_REPO_NAME: "test-node-app"
-    IMAGE_NAME: "$DOCKER_USERNAME/test-node-app"
+    IMAGE_NAME: "maverick334/test-node-app"
 
 phases:
   install:
@@ -25,7 +25,7 @@ phases:
       - echo "Building Docker image..."
       - docker build -t $IMAGE_NAME:latest .
       - echo "Creating zip package..."
-      - zip -r test-node-app.zip * .[^.]*
+      - zip -r test-node-app.zip $(ls -A | grep -v test-node-app.zip)
 
   post_build:
     commands:
@@ -35,7 +35,8 @@ phases:
       - aws s3 cp test-node-app.zip s3://new-test-bucket-122/test-node-app/
       - echo "Uploaded zip file to S3."
       - echo "Writing image definitions file..."
-      - printf '{"ImageURI":"%s", "Port":8000}' $IMAGE_NAME:latest > imageDefinitions.json
+      - IMAGE_URI="$IMAGE_NAME:latest"
+      - printf '{"ImageURI":"%s", "Port":8000}' $IMAGE_URI > imageDefinitions.json
       - cat imageDefinitions.json
 
 artifacts:
